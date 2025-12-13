@@ -92,6 +92,14 @@ export default function App() {
     }
   };
 
+  const handleUpdateTransaction = (updated: Transaction) => {
+    setTransactions(prev => prev.map(t => t.id === updated.id ? updated : t));
+  };
+
+  const handleRemoveTransaction = (id: string) => {
+    setTransactions(prev => prev.filter(t => t.id !== id));
+  };
+
   const handleAddIncomeSource = (s: IncomeSource) => setIncomeSources(prev => [...prev, s]);
   
   const handleUpdateIncomeSource = (updated: IncomeSource) => {
@@ -246,7 +254,12 @@ export default function App() {
                 )}
                 
                 {view === ViewState.TRANSACTIONS && (
-                    <Transactions transactions={filteredTransactions} onAddTransaction={handleAddTransaction} />
+                    <Transactions 
+                      transactions={filteredTransactions} 
+                      onAddTransaction={handleAddTransaction}
+                      onUpdateTransaction={handleUpdateTransaction}
+                      onRemoveTransaction={handleRemoveTransaction}
+                    />
                 )}
 
                 {(view === ViewState.INCOME || view === ViewState.GOALS) && (
