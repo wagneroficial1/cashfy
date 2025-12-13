@@ -1,16 +1,23 @@
 import React, { useState } from 'react';
 import { Transaction, TransactionType } from '../types';
 import { Card, Button, Input, Select, cn } from './UI';
-import { Plus, Search, Filter, TrendingDown, TrendingUp, DollarSign } from 'lucide-react';
+import { Plus, Search, Filter, TrendingDown, TrendingUp, DollarSign, Pencil, Trash2, X } from 'lucide-react';
 
 interface TransactionsProps {
   transactions: Transaction[];
   onAddTransaction: (t: Transaction) => void;
+  onUpdateTransaction: (t: Transaction) => void;
+  onRemoveTransaction: (id: string) => void;
 }
 
-export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAddTransaction }) => {
+export const Transactions: React.FC<TransactionsProps> = ({ 
+  transactions, onAddTransaction, onUpdateTransaction, onRemoveTransaction 
+}) => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [filter, setFilter] = useState('');
+  
+  // Edit State
+  const [editingId, setEditingId] = useState<string | null>(null);
   
   // New transaction state
   const [newTx, setNewTx] = useState<Partial<Transaction>>({
@@ -25,16 +32,46 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAddT
     e.preventDefault();
     if (!newTx.amount || !newTx.description) return;
 
-    onAddTransaction({
-      id: Math.random().toString(36).substr(2, 9),
-      date: newTx.date!,
-      description: newTx.description!,
-      amount: Number(newTx.amount),
-      category: newTx.category || 'Geral',
-      type: newTx.type as TransactionType
-    });
+    if (editingId) {
+        // Update existing
+        onUpdateTransaction({
+            id: editingId,
+            date: newTx.date!,
+            description: newTx.description!,
+            amount: Number(newTx.amount),
+            category: newTx.category || 'Geral',
+            type: newTx.type as TransactionType
+        });
+    } else {
+        // Create new
+        onAddTransaction({
+            id: Math.random().toString(36).substr(2, 9),
+            date: newTx.date!,
+            description: newTx.description!,
+            amount: Number(newTx.amount),
+            category: newTx.category || 'Geral',
+            type: newTx.type as TransactionType
+        });
+    }
     
-    // Reset and close
+    resetForm();
+  };
+
+  const handleEditClick = (t: Transaction) => {
+    setNewTx({
+        type: t.type,
+        date: t.date,
+        amount: t.amount,
+        category: t.category,
+        description: t.description
+    });
+    setEditingId(t.id);
+    setIsFormOpen(true);
+    // Scroll to top to see form
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const resetForm = () => {
     setNewTx({
       type: 'expense',
       date: new Date().toISOString().split('T')[0],
@@ -42,6 +79,7 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAddT
       category: 'Geral',
       description: ''
     });
+    setEditingId(null);
     setIsFormOpen(false);
   };
 
@@ -53,14 +91,22 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAddT
     <div className="space-y-6">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <h2 className="text-2xl font-bold text-white">Transações</h2>
-        <Button onClick={() => setIsFormOpen(!isFormOpen)} className="flex items-center gap-2">
-          <Plus size={18} /> Nova Transação
-        </Button>
+        {!isFormOpen && (
+            <Button onClick={() => setIsFormOpen(true)} className="flex items-center gap-2">
+            <Plus size={18} /> Nova Transação
+            </Button>
+        )}
       </div>
 
       {isFormOpen && (
-        <Card className="p-6 border-emerald-500/30">
-          <h3 className="text-lg font-semibold mb-4 text-emerald-400">Registrar Pagamento / Receita</h3>
+        <Card className={cn("p-6 border-2 transition-colors", editingId ? "border-blue-500/30 bg-blue-900/10" : "border-emerald-500/30")}>
+          <div className="flex justify-between items-center mb-4">
+            <h3 className={cn("text-lg font-semibold", editingId ? "text-blue-400" : "text-emerald-400")}>
+                {editingId ? 'Editar Transação' : 'Registrar Pagamento / Receita'}
+            </h3>
+            <button onClick={resetForm} className="text-slate-400 hover:text-white"><X size={20}/></button>
+          </div>
+          
           <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <Select 
               label="Tipo" 
@@ -97,8 +143,10 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAddT
               onChange={(e) => setNewTx({...newTx, category: e.target.value})} 
             />
             <div className="flex items-end gap-2">
-              <Button type="submit" className="w-full">Adicionar</Button>
-              <Button type="button" variant="secondary" onClick={() => setIsFormOpen(false)}>Cancelar</Button>
+              <Button type="submit" className={cn("w-full", editingId ? "bg-blue-600 hover:bg-blue-700" : "")}>
+                {editingId ? 'Salvar Alterações' : 'Adicionar'}
+              </Button>
+              <Button type="button" variant="secondary" onClick={resetForm}>Cancelar</Button>
             </div>
           </form>
         </Card>
@@ -129,11 +177,12 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAddT
                 <th className="px-6 py-4">Categoria</th>
                 <th className="px-6 py-4">Tipo</th>
                 <th className="px-6 py-4 text-right">Valor</th>
+                <th className="px-6 py-4 text-center">Ações</th>
                 </tr>
             </thead>
             <tbody className="divide-y divide-slate-700">
                 {filteredTransactions.map((t) => (
-                <tr key={t.id} className="hover:bg-slate-700/30 transition-colors">
+                <tr key={t.id} className={cn("hover:bg-slate-700/30 transition-colors", editingId === t.id && "bg-blue-900/20")}>
                     <td className="px-6 py-4 font-mono text-slate-500">{new Date(t.date).toLocaleDateString('pt-BR')}</td>
                     <td className="px-6 py-4 font-medium text-slate-200">{t.description}</td>
                     <td className="px-6 py-4">
@@ -151,11 +200,29 @@ export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAddT
                     )}>
                     {t.type === 'expense' ? '-' : '+'} R$ {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
                     </td>
+                    <td className="px-6 py-4">
+                        <div className="flex items-center justify-center gap-2">
+                            <button 
+                                onClick={() => handleEditClick(t)}
+                                className="p-2 text-slate-400 hover:text-blue-400 hover:bg-slate-800 rounded-lg transition-colors"
+                                title="Editar"
+                            >
+                                <Pencil size={16} />
+                            </button>
+                            <button 
+                                onClick={() => onRemoveTransaction(t.id)}
+                                className="p-2 text-slate-400 hover:text-rose-500 hover:bg-slate-800 rounded-lg transition-colors"
+                                title="Excluir"
+                            >
+                                <Trash2 size={16} />
+                            </button>
+                        </div>
+                    </td>
                 </tr>
                 ))}
                 {filteredTransactions.length === 0 && (
                     <tr>
-                        <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                        <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
                             Nenhuma transação encontrada.
                         </td>
                     </tr>
