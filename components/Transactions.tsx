@@ -1,0 +1,169 @@
+import React, { useState } from 'react';
+import { Transaction, TransactionType } from '../types';
+import { Card, Button, Input, Select, cn } from './UI';
+import { Plus, Search, Filter, TrendingDown, TrendingUp, DollarSign } from 'lucide-react';
+
+interface TransactionsProps {
+  transactions: Transaction[];
+  onAddTransaction: (t: Transaction) => void;
+}
+
+export const Transactions: React.FC<TransactionsProps> = ({ transactions, onAddTransaction }) => {
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [filter, setFilter] = useState('');
+  
+  // New transaction state
+  const [newTx, setNewTx] = useState<Partial<Transaction>>({
+    type: 'expense',
+    date: new Date().toISOString().split('T')[0],
+    amount: 0,
+    category: 'Geral',
+    description: ''
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTx.amount || !newTx.description) return;
+
+    onAddTransaction({
+      id: Math.random().toString(36).substr(2, 9),
+      date: newTx.date!,
+      description: newTx.description!,
+      amount: Number(newTx.amount),
+      category: newTx.category || 'Geral',
+      type: newTx.type as TransactionType
+    });
+    
+    // Reset and close
+    setNewTx({
+      type: 'expense',
+      date: new Date().toISOString().split('T')[0],
+      amount: 0,
+      category: 'Geral',
+      description: ''
+    });
+    setIsFormOpen(false);
+  };
+
+  const filteredTransactions = transactions
+    .filter(t => t.description.toLowerCase().includes(filter.toLowerCase()) || t.category.toLowerCase().includes(filter.toLowerCase()))
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+        <h2 className="text-2xl font-bold text-white">Transações</h2>
+        <Button onClick={() => setIsFormOpen(!isFormOpen)} className="flex items-center gap-2">
+          <Plus size={18} /> Nova Transação
+        </Button>
+      </div>
+
+      {isFormOpen && (
+        <Card className="p-6 border-emerald-500/30">
+          <h3 className="text-lg font-semibold mb-4 text-emerald-400">Registrar Pagamento / Receita</h3>
+          <form onSubmit={handleSubmit} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <Select 
+              label="Tipo" 
+              value={newTx.type} 
+              onChange={(e) => setNewTx({...newTx, type: e.target.value as TransactionType})}
+            >
+              <option value="expense">Despesa</option>
+              <option value="income">Receita</option>
+              <option value="investment">Investimento</option>
+            </Select>
+            <Input 
+              label="Data" 
+              type="date" 
+              value={newTx.date} 
+              onChange={(e) => setNewTx({...newTx, date: e.target.value})} 
+            />
+            <Input 
+              label="Valor (R$)" 
+              type="number" 
+              step="0.01"
+              value={newTx.amount} 
+              onChange={(e) => setNewTx({...newTx, amount: parseFloat(e.target.value)})} 
+            />
+            <Input 
+              label="Descrição" 
+              placeholder="ex: Compras do Mês"
+              value={newTx.description} 
+              onChange={(e) => setNewTx({...newTx, description: e.target.value})} 
+            />
+            <Input 
+              label="Categoria" 
+              placeholder="ex: Alimentação, Salário, Ações"
+              value={newTx.category} 
+              onChange={(e) => setNewTx({...newTx, category: e.target.value})} 
+            />
+            <div className="flex items-end gap-2">
+              <Button type="submit" className="w-full">Adicionar</Button>
+              <Button type="button" variant="secondary" onClick={() => setIsFormOpen(false)}>Cancelar</Button>
+            </div>
+          </form>
+        </Card>
+      )}
+
+      <Card className="overflow-hidden">
+        <div className="p-4 border-b border-slate-700 flex items-center gap-4">
+            <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4" />
+                <input 
+                    type="text" 
+                    placeholder="Buscar transações..." 
+                    className="w-full bg-slate-900 border border-slate-700 rounded-lg pl-10 pr-4 py-2 text-sm text-slate-200 focus:outline-none focus:border-emerald-500"
+                    value={filter}
+                    onChange={(e) => setFilter(e.target.value)}
+                />
+            </div>
+            <Button variant="ghost" className="hidden md:flex items-center gap-2">
+                <Filter size={16} /> Filtrar
+            </Button>
+        </div>
+        <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm text-slate-400">
+            <thead className="bg-slate-900/50 uppercase font-medium">
+                <tr>
+                <th className="px-6 py-4">Data</th>
+                <th className="px-6 py-4">Descrição</th>
+                <th className="px-6 py-4">Categoria</th>
+                <th className="px-6 py-4">Tipo</th>
+                <th className="px-6 py-4 text-right">Valor</th>
+                </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-700">
+                {filteredTransactions.map((t) => (
+                <tr key={t.id} className="hover:bg-slate-700/30 transition-colors">
+                    <td className="px-6 py-4 font-mono text-slate-500">{new Date(t.date).toLocaleDateString('pt-BR')}</td>
+                    <td className="px-6 py-4 font-medium text-slate-200">{t.description}</td>
+                    <td className="px-6 py-4">
+                        <span className="px-2 py-1 rounded-full bg-slate-800 text-xs border border-slate-600">
+                            {t.category}
+                        </span>
+                    </td>
+                    <td className="px-6 py-4">
+                        {t.type === 'income' && <span className="flex items-center gap-1 text-emerald-400"><TrendingUp size={14}/> Receita</span>}
+                        {t.type === 'expense' && <span className="flex items-center gap-1 text-rose-400"><TrendingDown size={14}/> Despesa</span>}
+                        {t.type === 'investment' && <span className="flex items-center gap-1 text-purple-400"><DollarSign size={14}/> Invest.</span>}
+                    </td>
+                    <td className={cn("px-6 py-4 text-right font-bold", 
+                        t.type === 'income' ? "text-emerald-400" : t.type === 'expense' ? "text-slate-200" : "text-purple-400"
+                    )}>
+                    {t.type === 'expense' ? '-' : '+'} R$ {t.amount.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}
+                    </td>
+                </tr>
+                ))}
+                {filteredTransactions.length === 0 && (
+                    <tr>
+                        <td colSpan={5} className="px-6 py-12 text-center text-slate-500">
+                            Nenhuma transação encontrada.
+                        </td>
+                    </tr>
+                )}
+            </tbody>
+            </table>
+        </div>
+      </Card>
+    </div>
+  );
+};
