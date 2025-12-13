@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import Auth from "./components/Auth";
 import MainApp from "./MainApp";
-import { supabase } from "./services/supabaseClient";
+import supabase from "./services/supabaseClient";
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
