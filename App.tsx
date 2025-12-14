@@ -11,6 +11,8 @@ import { Transaction, IncomeSource, Goal, ViewState } from './types';
 import { Button, Card, cn } from './components/UI';
 import { generateFinancialInsights } from './services/geminiService';
 import Markdown from 'react-markdown';
+import Register from './components/auth/Register';
+
 
 // Mock Initial Data (Portuguese)
 const INITIAL_TRANSACTIONS: Transaction[] = [
@@ -36,7 +38,8 @@ const INITIAL_GOALS: Goal[] = [
 
 export default function App() {
   const [session, setSession] = useState<any>(null);
-
+const [showRegister, setShowRegister] = useState(false);
+  
 useEffect(() => {
   supabase.auth.getSession().then(({ data }) => {
     setSession(data.session);
@@ -147,7 +150,16 @@ useEffect(() => {
   };
 
   if (!session) {
-  return <Login onSuccess={() => {}} />;
+  if (showRegister) {
+    return <Register onBackToLogin={() => setShowRegister(false)} />;
+  }
+
+  return (
+    <Login
+      onSuccess={() => {}}
+      onCreateAccount={() => setShowRegister(true)}
+    />
+  );
 }
   
   return (
