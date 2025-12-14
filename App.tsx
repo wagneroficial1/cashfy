@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from './services/supabaseClient';
+import Login from './components/auth/Login';
 import { 
   LayoutDashboard, PieChart, Target, Receipt, Menu, X, Bell, BrainCircuit, Calendar
 } from 'lucide-react';
@@ -33,6 +35,23 @@ const INITIAL_GOALS: Goal[] = [
 ];
 
 export default function App() {
+  const [session, setSession] = useState<any>(null);
+
+useEffect(() => {
+  supabase.auth.getSession().then(({ data }) => {
+    setSession(data.session);
+  });
+
+  const { data: listener } = supabase.auth.onAuthStateChange(
+    (_event, session) => {
+      setSession(session);
+    }
+  );
+
+  return () => {
+    listener.subscription.unsubscribe();
+  };
+}, []);
   const [view, setView] = useState<ViewState>(ViewState.DASHBOARD);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   
@@ -127,7 +146,12 @@ export default function App() {
     setAiLoading(false);
   };
 
+  if (!session) {
+  return <Login onSuccess={() => {}} />;
+}
+  
   return (
+    
     <div className="min-h-screen bg-slate-950 text-slate-100 flex font-inter overflow-hidden">
       
       {/* Mobile Sidebar Overlay */}
