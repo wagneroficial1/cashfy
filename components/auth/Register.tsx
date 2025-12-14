@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
-import { AuthLayout } from '../layouts/AuthLayout';
-import { Input } from '../ui/Input';
-import { Button } from '../ui/Button';
+import { Input } from '../../components/ui/Input';
+import { Button } from '../../components/ui/Button';
+import { AuthLayout } from '../../components/layouts/AuthLayout';
+
 import { Mail, Lock, User, Building2, AlertCircle } from 'lucide-react';
 
 type AuthStatus = 'IDLE' | 'LOADING' | 'SUCCESS' | 'ERROR';
