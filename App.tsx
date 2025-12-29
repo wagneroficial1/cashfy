@@ -49,18 +49,30 @@ export default function App() {
 
   // Auth State
   const [session, setSession] = useState<any>(null);
+  const [initialLoading, setInitialLoading] = useState(true);
 
   useEffect(() => {
+    // Initial Session Check
     supabase.auth.getSession().then(({ data: { session } }) => {
       setSession(session);
-      if (session) setShowLanding(false);
+      if (session) {
+        setShowLanding(false);
+      }
+      setInitialLoading(false);
     });
 
+    // Listen for Auth Changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
-      if (session) setShowLanding(false);
+      if (session) {
+        setShowLanding(false);
+      }
+      // If we logout and was not in landing, show auth
+      if (!session && !showLanding) {
+        // setShowLanding(false) logic maintained by current state
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -540,8 +552,25 @@ export default function App() {
   };
 
   // --- View Logic ---
+
+  // 0. Splash Screen / Initial Loading
+  if (initialLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center animate-fade-in">
+        <div className="w-16 h-16 rounded-2xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/20 mb-4">
+          <span className="font-bold text-white text-3xl">C</span>
+        </div>
+        <div className="flex items-center gap-2 text-slate-500 dark:text-slate-400">
+          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce" />
+          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:0.2s]" />
+          <div className="w-2 h-2 bg-emerald-500 rounded-full animate-bounce [animation-delay:0.4s]" />
+        </div>
+      </div>
+    );
+  }
+
   // 1. Landing Page
-  if (showLanding) {
+  if (showLanding && !session) {
     return <LandingPage onStart={handleStartApp} />;
   }
 
