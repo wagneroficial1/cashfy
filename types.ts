@@ -9,6 +9,13 @@ export interface Transaction {
   type: TransactionType;
 }
 
+export interface Project {
+  id: string;
+  user_id: string;
+  name: string;
+  created_at: string;
+}
+
 export interface IncomeSource {
   id: string;
   name: string;
@@ -40,7 +47,8 @@ export enum ViewState {
   AI_ADVISOR = 'AI_ADVISOR',
   ACHIEVEMENTS = 'ACHIEVEMENTS',
   LEARNING = 'LEARNING',
-  SHOPPING_LIST = 'SHOPPING_LIST'
+  SHOPPING_LIST = 'SHOPPING_LIST',
+  PLANS = 'PLANS'
 }
 
 // Gamification Types

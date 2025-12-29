@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Card, Button, cn } from './UI';
-import { 
-  BookOpen, TrendingUp, Building, Landmark, CheckCircle, XCircle, 
-  ArrowRight, GraduationCap, Coins, ArrowLeft, BrainCircuit, 
+import {
+  BookOpen, TrendingUp, Building, Landmark, CheckCircle, XCircle,
+  ArrowRight, GraduationCap, Coins, ArrowLeft, BrainCircuit,
   Briefcase, ShieldCheck, Zap, Gem, PieChart, Anchor
 } from 'lucide-react';
 
@@ -320,7 +320,7 @@ const MODULES: LearningModule[] = [
 ];
 
 interface LearningHubProps {
-  onEarnXP: (amount: number) => void;
+  onEarnXP: (amount: number, moduleId?: string) => void;
 }
 
 export const LearningHub: React.FC<LearningHubProps> = ({ onEarnXP }) => {
@@ -352,7 +352,7 @@ export const LearningHub: React.FC<LearningHubProps> = ({ onEarnXP }) => {
 
     if (selectedOption === currentQuestion.correctAnswer) {
       setQuizStatus('success');
-      onEarnXP(50);
+      onEarnXP(50, activeModule.id);
     } else {
       setQuizStatus('failure');
       onEarnXP(-20); // Penalty logic added
@@ -387,8 +387,8 @@ export const LearningHub: React.FC<LearningHubProps> = ({ onEarnXP }) => {
           {MODULES.map((module) => {
             const Icon = module.icon;
             return (
-              <Card 
-                key={module.id} 
+              <Card
+                key={module.id}
                 className="group cursor-pointer hover:-translate-y-1 transition-all duration-300 overflow-hidden relative border-2 border-transparent hover:border-slate-200 dark:hover:border-slate-700"
                 onClick={() => handleOpenModule(module)}
               >
@@ -432,7 +432,7 @@ export const LearningHub: React.FC<LearningHubProps> = ({ onEarnXP }) => {
               <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide">
                 Micro-learning
               </span>
-              {quizMode && <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide flex items-center gap-1"><BrainCircuit size={12}/> Quiz Valendo XP</span>}
+              {quizMode && <span className="bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide flex items-center gap-1"><BrainCircuit size={12} /> Quiz Valendo XP</span>}
             </div>
             <h1 className="text-3xl md:text-4xl font-bold mb-2">{activeModule.title}</h1>
             <p className="text-white/90 text-lg max-w-xl">{activeModule.description}</p>
@@ -440,17 +440,17 @@ export const LearningHub: React.FC<LearningHubProps> = ({ onEarnXP }) => {
         </div>
 
         <div className="p-6 md:p-8 bg-white dark:bg-slate-900 min-h-[400px]">
-          
+
           {/* MODO LEITURA */}
           {!quizMode && (
             <div className="animate-fade-in space-y-8">
               <div className="prose dark:prose-invert max-w-none text-lg leading-relaxed">
                 {activeModule.content}
               </div>
-              
+
               <div className="pt-6 border-t border-slate-100 dark:border-slate-800 flex justify-end">
-                <Button 
-                  onClick={handleStartQuiz} 
+                <Button
+                  onClick={handleStartQuiz}
                   className={`${themeColorBg} hover:opacity-90 text-white px-8 py-3 text-lg shadow-lg shadow-blue-900/10 flex items-center gap-2`}
                 >
                   <BookOpen size={20} /> Finalizar e Testar
@@ -467,7 +467,7 @@ export const LearningHub: React.FC<LearningHubProps> = ({ onEarnXP }) => {
                   <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-6 text-center">
                     {currentQuestion.text}
                   </h3>
-                  
+
                   <div className="space-y-3 mb-8">
                     {currentQuestion.options.map((option, idx) => (
                       <button
@@ -475,7 +475,7 @@ export const LearningHub: React.FC<LearningHubProps> = ({ onEarnXP }) => {
                         onClick={() => setSelectedOption(idx)}
                         className={cn(
                           "w-full text-left p-4 rounded-xl border-2 transition-all duration-200 flex items-center gap-3",
-                          selectedOption === idx 
+                          selectedOption === idx
                             ? `border-${activeModule.color.split('-')[1]}-500 bg-${activeModule.color.split('-')[1]}-50 dark:bg-${activeModule.color.split('-')[1]}-900/20`
                             : "border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 bg-transparent"
                         )}
@@ -493,7 +493,7 @@ export const LearningHub: React.FC<LearningHubProps> = ({ onEarnXP }) => {
                     ))}
                   </div>
 
-                  <Button 
+                  <Button
                     onClick={handleSubmitAnswer}
                     disabled={selectedOption === null}
                     className="w-full py-4 text-lg font-bold"
@@ -510,7 +510,7 @@ export const LearningHub: React.FC<LearningHubProps> = ({ onEarnXP }) => {
                   </div>
                   <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Resposta Correta!</h3>
                   <p className="text-slate-600 dark:text-slate-400 mb-6">Você aprendeu algo novo hoje.</p>
-                  
+
                   <div className="inline-block bg-yellow-100 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-500 px-6 py-2 rounded-full font-bold text-lg mb-8 border border-yellow-200 dark:border-yellow-700/50">
                     +50 XP Conquistados
                   </div>
@@ -530,11 +530,11 @@ export const LearningHub: React.FC<LearningHubProps> = ({ onEarnXP }) => {
                   </div>
                   <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">Ops, resposta errada.</h3>
                   <p className="text-slate-600 dark:text-slate-400 mb-4">Atenção aos detalhes! Você pode tentar novamente.</p>
-                  
+
                   <div className="inline-block bg-rose-100 dark:bg-rose-900/20 text-rose-700 dark:text-rose-500 px-6 py-2 rounded-full font-bold text-lg mb-8 border border-rose-200 dark:border-rose-700/50">
                     -20 XP
                   </div>
-                  
+
                   <div className="flex gap-4 justify-center">
                     <Button variant="secondary" onClick={() => { setQuizMode(false); setQuizStatus('idle'); }}>
                       Ler Novamente

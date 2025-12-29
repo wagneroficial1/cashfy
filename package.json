@@ -9,15 +9,16 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@google/genai": "^1.33.0",
+    "@supabase/supabase-js": "^2.89.0",
+    "clsx": "^2.1.1",
+    "jspdf": "2.5.1",
+    "lucide-react": "^0.561.0",
     "react": "^19.2.3",
     "react-dom": "^19.2.3",
-    "@google/genai": "^1.33.0",
-    "recharts": "^3.5.1",
-    "lucide-react": "^0.561.0",
-    "clsx": "^2.1.1",
     "react-markdown": "^10.1.0",
-    "tailwind-merge": "^3.4.0",
-    "jspdf": "2.5.1"
+    "recharts": "^3.5.1",
+    "tailwind-merge": "^3.4.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

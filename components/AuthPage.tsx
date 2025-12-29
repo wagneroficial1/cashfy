@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, Button, Input, cn } from './UI';
-import { Mail, Lock, User, ArrowRight, CheckCircle, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, User, ArrowRight, CheckCircle, ShieldCheck, AlertCircle } from 'lucide-react';
+import { supabase } from '../services/supabaseClient';
 
 interface AuthPageProps {
   onLogin: () => void;
@@ -9,21 +10,43 @@ interface AuthPageProps {
 export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: ''
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulating API latency
-    setTimeout(() => {
+    setError(null);
+
+    try {
+      if (isLogin) {
+        const { error } = await supabase.auth.signInWithPassword({
+          email: formData.email,
+          password: formData.password
+        });
+        if (error) throw error;
+        // Navigation handles session state update in App.tsx
+      } else {
+        const { error } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            data: {
+              name: formData.name
+            }
+          }
+        });
+        if (error) throw error;
+      }
+    } catch (err: any) {
+      console.error("Supabase Auth Error - Full Details:", err);
+      setError(err.message || "Ocorreu um erro ao tentar autenticar.");
       setIsLoading(false);
-      onLogin();
-    }, 1500);
+    }
   };
 
   return (
@@ -33,7 +56,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
       <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-purple-500/10 rounded-full blur-[100px]" />
 
       <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 gap-0 lg:gap-8 items-center z-10">
-        
+
         {/* Left Side - Hero / Marketing (Visible on Desktop) */}
         <div className="hidden lg:flex flex-col gap-6 p-8">
           <div className="w-12 h-12 rounded-xl bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-900/50 mb-4">
@@ -45,7 +68,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
           <p className="text-slate-600 dark:text-slate-400 text-lg">
             Rastreie despesas, planeje metas e receba insights de IA para alcançar sua liberdade financeira mais rápido.
           </p>
-          
+
           <div className="space-y-4 mt-4">
             <div className="flex items-center gap-3 text-slate-700 dark:text-slate-300">
               <CheckCircle className="text-emerald-500 w-5 h-5" />
@@ -66,7 +89,7 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
         <Card className="w-full max-w-md mx-auto p-8 border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl shadow-2xl shadow-slate-200/50 dark:shadow-black/50">
           <div className="text-center mb-8 lg:hidden">
             <div className="w-10 h-10 rounded-lg bg-emerald-500 flex items-center justify-center mx-auto mb-3">
-               <span className="font-bold text-white text-xl">C</span>
+              <span className="font-bold text-white text-xl">C</span>
             </div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Bem-vindo ao Cashfy</h2>
           </div>
@@ -93,18 +116,24 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 text-sm rounded-lg flex items-center gap-2">
+                <AlertCircle size={16} />
+                <span>{error}</span>
+              </div>
+            )}
             {!isLogin && (
               <div className="space-y-1.5 animate-fade-in">
                 <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Nome Completo</label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 w-4 h-4" />
-                  <input 
-                    type="text" 
-                    required 
+                  <input
+                    type="text"
+                    required
                     placeholder="Seu nome"
                     className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-slate-900 dark:text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
                     value={formData.name}
-                    onChange={e => setFormData({...formData, name: e.target.value})}
+                    onChange={e => setFormData({ ...formData, name: e.target.value })}
                   />
                 </div>
               </div>
@@ -114,13 +143,13 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
               <label className="text-sm font-medium text-slate-600 dark:text-slate-400">Email</label>
               <div className="relative">
                 <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 w-4 h-4" />
-                <input 
-                  type="email" 
-                  required 
+                <input
+                  type="email"
+                  required
                   placeholder="seu@email.com"
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-slate-900 dark:text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
                   value={formData.email}
-                  onChange={e => setFormData({...formData, email: e.target.value})}
+                  onChange={e => setFormData({ ...formData, email: e.target.value })}
                 />
               </div>
             </div>
@@ -132,19 +161,19 @@ export const AuthPage: React.FC<AuthPageProps> = ({ onLogin }) => {
               </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 w-4 h-4" />
-                <input 
-                  type="password" 
-                  required 
+                <input
+                  type="password"
+                  required
                   placeholder="••••••••"
                   className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-lg pl-10 pr-4 py-2.5 text-slate-900 dark:text-slate-200 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 transition-all placeholder:text-slate-400 dark:placeholder:text-slate-600"
                   value={formData.password}
-                  onChange={e => setFormData({...formData, password: e.target.value})}
+                  onChange={e => setFormData({ ...formData, password: e.target.value })}
                 />
               </div>
             </div>
 
-            <Button 
-              type="submit" 
+            <Button
+              type="submit"
               className="w-full mt-6 py-2.5 flex items-center justify-center gap-2 group"
               disabled={isLoading}
             >
