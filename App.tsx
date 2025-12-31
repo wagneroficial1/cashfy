@@ -125,7 +125,16 @@ export default function App() {
   // Theme State
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
-  const [view, setView] = useState<ViewState>(ViewState.DASHBOARD);
+  // Navigation State with persistence
+  const [view, setView] = useState<ViewState>(() => {
+    const saved = localStorage.getItem('cashfy_current_view');
+    return (saved as ViewState) || ViewState.DASHBOARD;
+  });
+
+  useEffect(() => {
+    localStorage.setItem('cashfy_current_view', view);
+  }, [view]);
+
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   // App State
