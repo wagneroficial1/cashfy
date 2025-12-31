@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
 import {
   LayoutDashboard, PieChart, Target, Receipt, Menu, X, Bell, BrainCircuit, Calendar, LogOut, Moon, Sun, Award, GraduationCap, ShoppingCart, Trophy, ArrowRight
 } from 'lucide-react';
+import { BrowserRouter, Routes, Route, Navigate, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { Dashboard } from './components/Dashboard';
 import { Transactions } from './components/Transactions';
 import { IncomeGoals } from './components/IncomeGoals';
@@ -12,7 +12,7 @@ import { Achievements } from './components/Achievements';
 import { LearningHub } from './components/LearningHub';
 import { ShoppingList } from './components/ShoppingList';
 import { PlansPage } from './components/PlansPage';
-import { Transaction, IncomeSource, Goal, ViewState, AIAnalysisResult, Badge, Project } from './types';
+import { Transaction, IncomeSource, Goal, AIAnalysisResult, Badge, Project } from './types';
 import { Button, Card, cn } from './components/UI';
 import { generateFinancialInsights } from './services/geminiService';
 import { supabase } from './services/supabaseClient';
@@ -125,7 +125,6 @@ export default function App() {
   // Theme State
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
 
-  const [view, setView] = useState<ViewState>(ViewState.DASHBOARD);
   const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   // App State
@@ -142,50 +141,103 @@ export default function App() {
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
   const [celebrationBadge, setCelebrationBadge] = useState<Badge | null>(null);
 
-  // Date Filter State (YYYY-MM)
-  const [selectedMonth, setSelectedMonth] = useState<string>(currentMonth);
+  return (
+    <BrowserRouter>
+      <AppContent
+        session={session}
+        initialLoading={initialLoading}
+        showLanding={showLanding}
+        setShowLanding={setShowLanding}
+        setSession={setSession}
+        setInitialLoading={setInitialLoading}
+        theme={theme}
+        setTheme={setTheme}
+        projects={projects}
+        setProjects={setProjects}
+        transactions={transactions}
+        setTransactions={setTransactions}
+        incomeSources={incomeSources}
+        setIncomeSources={setIncomeSources}
+        goals={goals}
+        setGoals={setGoals}
+        notifications={notifications}
+        setNotifications={setNotifications}
+        badges={badges}
+        setBadges={setBadges}
+        userXP={userXP}
+        setUserXP={setUserXP}
+        learningTotalXP={learningTotalXP}
+        setLearningTotalXP={setLearningTotalXP}
+        completedLessons={completedLessons}
+        setCompletedLessons={setCompletedLessons}
+        celebrationBadge={celebrationBadge}
+        setCelebrationBadge={setCelebrationBadge}
+        selectedMonth={selectedMonth}
+        setSelectedMonth={setSelectedMonth}
+        aiLoading={aiLoading}
+        setAiLoading={setAiLoading}
+        aiInsight={aiInsight}
+        setAiInsight={setAiInsight}
+        userLevel={userLevel}
+        nextLevelXP={nextLevelXP}
+        hasHydrated={hasHydrated}
+        shownAchievementIds={shownAchievementIds}
+        setShownAchievementIds={setShownAchievementIds}
+        shoppingListTotal={shoppingListTotal}
+        toggleTheme={toggleTheme}
+        filteredTransactions={filteredTransactions}
+      />
+    </BrowserRouter>
+  );
+}
 
-  // AI State
-  const [aiLoading, setAiLoading] = useState(false);
-  const [aiInsight, setAiInsight] = useState<AIAnalysisResult | null>(null);
-
-  // Derived Level Calculation
-  const userLevel = Math.floor(userXP / 1000) + 1;
-  const nextLevelXP = userLevel * 1000;
-
-  // Track if the first gamification calculation has happened
-  const hasHydrated = React.useRef(false);
-
-  // Persist shown achievement IDs to avoid repeated popups
-  const [shownAchievementIds, setShownAchievementIds] = useState<Set<string>>(() => {
-    const saved = localStorage.getItem('cashfy_shown_achievements');
-    return saved ? new Set(JSON.parse(saved)) : new Set();
-  });
-
-  useEffect(() => {
-    localStorage.setItem('cashfy_shown_achievements', JSON.stringify(Array.from(shownAchievementIds)));
-  }, [shownAchievementIds]);
-
-  // Derived: Shopping List Total Calculation
-  const shoppingListTotal = transactions
-    .filter(t => t.category === 'Lista de Compras' && t.type === 'expense')
-    .reduce((acc, t) => acc + t.amount, 0);
-
-  // Apply Theme
-  useEffect(() => {
-    if (theme === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else {
-      document.documentElement.classList.remove('dark');
-    }
-  }, [theme]);
-
-  const toggleTheme = () => {
-    setTheme(prev => prev === 'dark' ? 'light' : 'dark');
-  };
-
-  // Derived State: Filter transactions by month
-  const filteredTransactions = transactions.filter(t => t.date.startsWith(selectedMonth));
+function AppContent({
+  session,
+  initialLoading,
+  showLanding,
+  setShowLanding,
+  setSession,
+  setInitialLoading,
+  theme,
+  setTheme,
+  projects,
+  setProjects,
+  transactions,
+  setTransactions,
+  incomeSources,
+  setIncomeSources,
+  goals,
+  setGoals,
+  notifications,
+  setNotifications,
+  badges,
+  setBadges,
+  userXP,
+  setUserXP,
+  learningTotalXP,
+  setLearningTotalXP,
+  completedLessons,
+  setCompletedLessons,
+  celebrationBadge,
+  setCelebrationBadge,
+  selectedMonth,
+  setSelectedMonth,
+  aiLoading,
+  setAiLoading,
+  aiInsight,
+  setAiInsight,
+  userLevel,
+  nextLevelXP,
+  hasHydrated,
+  shownAchievementIds,
+  setShownAchievementIds,
+  shoppingListTotal,
+  toggleTheme,
+  filteredTransactions
+}: any) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [isSidebarOpen, setSidebarOpen] = useState(false);
 
   // --- Gamification Engine ---
   useEffect(() => {
@@ -312,7 +364,7 @@ export default function App() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setShowLanding(true); // Return to Landing on logout
-    setView(ViewState.DASHBOARD);
+    navigate('/');
     setSidebarOpen(false);
   };
 
@@ -467,7 +519,7 @@ export default function App() {
 
   const runAIAnalysis = async () => {
     setAiLoading(true);
-    setView(ViewState.AI_ADVISOR);
+    navigate('/ia');
     const insight = await generateFinancialInsights(filteredTransactions, incomeSources, goals);
     setAiInsight(insight);
     setAiLoading(false);
@@ -602,7 +654,7 @@ export default function App() {
             <div className="inline-block px-4 py-2 bg-slate-100 dark:bg-slate-800 rounded-lg text-sm font-semibold">
               +{celebrationBadge.xpReward} XP Adicionados
             </div>
-            <Button className="w-full mt-6" onClick={() => { setCelebrationBadge(null); setView(ViewState.ACHIEVEMENTS); }}>
+            <Button className="w-full mt-6" onClick={() => { setCelebrationBadge(null); navigate('/conquistas'); }}>
               Ver Minha Coleção
             </Button>
           </div>
@@ -633,54 +685,47 @@ export default function App() {
 
         <nav className="flex-1 p-4 space-y-2">
           <NavItem
-            active={view === ViewState.DASHBOARD}
-            onClick={() => setView(ViewState.DASHBOARD)}
+            to="/"
             icon={<LayoutDashboard size={20} />}
             label="Visão Geral"
           />
           <NavItem
-            active={view === ViewState.TRANSACTIONS}
-            onClick={() => setView(ViewState.TRANSACTIONS)}
+            to="/transacoes"
             icon={<Receipt size={20} />}
             label="Transações"
           />
           <NavItem
-            active={view === ViewState.SHOPPING_LIST}
-            onClick={() => setView(ViewState.SHOPPING_LIST)}
+            to="/lista-compras"
             icon={<ShoppingCart size={20} />}
             label="Lista de Compras"
           />
           <NavItem
-            active={view === ViewState.INCOME || view === ViewState.GOALS}
-            onClick={() => setView(ViewState.INCOME)}
+            to="/metas"
             icon={<Target size={20} />}
             label="Metas & Renda"
           />
           <NavItem
-            active={view === ViewState.ACHIEVEMENTS}
-            onClick={() => setView(ViewState.ACHIEVEMENTS)}
+            to="/conquistas"
             icon={<Award size={20} />}
             label="Conquistas"
           />
           <NavItem
-            active={view === ViewState.LEARNING}
-            onClick={() => setView(ViewState.LEARNING)}
+            to="/aprender"
             icon={<GraduationCap size={20} />}
             label="Aprender"
           />
           <NavItem
-            active={view === ViewState.PLANS}
-            onClick={() => setView(ViewState.PLANS)}
+            to="/planos"
             icon={<Trophy size={20} />}
             label="Planos"
           />
           <div className="pt-4 mt-4 border-t border-slate-200 dark:border-slate-800">
             <NavItem
-              active={view === ViewState.AI_ADVISOR}
-              onClick={runAIAnalysis}
+              to="/ia"
               icon={<BrainCircuit size={20} className="text-purple-500 dark:text-purple-400" />}
               label="Consultor IA"
               className="hover:bg-purple-50 dark:hover:bg-purple-900/20"
+              onClick={runAIAnalysis}
             />
           </div>
         </nav>
@@ -695,7 +740,10 @@ export default function App() {
             <span>{theme === 'dark' ? 'Modo Escuro' : 'Modo Claro'}</span>
           </button>
 
-          <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50 mb-2 relative overflow-hidden group cursor-pointer" onClick={() => setView(ViewState.ACHIEVEMENTS)}>
+          <div
+            className="flex items-center gap-3 p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50 mb-2 relative overflow-hidden group cursor-pointer"
+            onClick={() => navigate('/conquistas')}
+          >
             <div className="absolute bottom-0 left-0 h-1 bg-indigo-500 transition-all duration-500" style={{ width: `${(userXP % 1000) / 10}%` }}></div>
             <div className="w-10 h-10 rounded-full bg-indigo-600 flex items-center justify-center text-sm font-bold text-white z-10">
               {userLevel}
@@ -768,81 +816,86 @@ export default function App() {
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-4 lg:p-8 bg-slate-50 dark:bg-slate-950 scroll-smooth transition-colors">
           <div className="max-w-7xl mx-auto">
-            {view === ViewState.DASHBOARD && (
-              <Dashboard
-                transactions={filteredTransactions}
-                incomeSources={incomeSources}
-                currentTheme={theme}
-                projects={projects}
-                onAddProject={handleAddProject}
-              />
-            )}
+            <Routes>
+              <Route path="/" element={
+                <Dashboard
+                  transactions={filteredTransactions}
+                  incomeSources={incomeSources}
+                  currentTheme={theme}
+                  projects={projects}
+                  onAddProject={handleAddProject}
+                />
+              } />
 
-            {view === ViewState.TRANSACTIONS && (
-              <Transactions
-                transactions={filteredTransactions}
-                onAddTransaction={handleAddTransaction}
-                onUpdateTransaction={handleUpdateTransaction}
-                onRemoveTransaction={handleRemoveTransaction}
-              />
-            )}
+              <Route path="/transacoes" element={
+                <Transactions
+                  transactions={filteredTransactions}
+                  onAddTransaction={handleAddTransaction}
+                  onUpdateTransaction={handleUpdateTransaction}
+                  onRemoveTransaction={handleRemoveTransaction}
+                />
+              } />
 
-            {view === ViewState.SHOPPING_LIST && (
-              <ShoppingList
-                onConcludePurchase={handleConcludeShopping}
-              />
-            )}
+              <Route path="/lista-compras" element={
+                <ShoppingList
+                  onConcludePurchase={handleConcludeShopping}
+                />
+              } />
 
-            {(view === ViewState.INCOME || view === ViewState.GOALS) && (
-              <IncomeGoals
-                incomeSources={incomeSources}
-                goals={goals}
-                badges={badges}
-                onAddIncomeSource={handleAddIncomeSource}
-                onUpdateIncomeSource={handleUpdateIncomeSource}
-                onRemoveIncomeSource={handleRemoveIncomeSource}
-                onAddGoal={handleAddGoal}
-                onUpdateGoal={handleUpdateGoal}
-                onRemoveGoal={handleRemoveGoal}
-              />
-            )}
+              <Route path="/metas" element={
+                <IncomeGoals
+                  incomeSources={incomeSources}
+                  goals={goals}
+                  badges={badges}
+                  onAddIncomeSource={handleAddIncomeSource}
+                  onUpdateIncomeSource={handleUpdateIncomeSource}
+                  onRemoveIncomeSource={handleRemoveIncomeSource}
+                  onAddGoal={handleAddGoal}
+                  onUpdateGoal={handleUpdateGoal}
+                  onRemoveGoal={handleRemoveGoal}
+                />
+              } />
 
-            {view === ViewState.ACHIEVEMENTS && (
-              <Achievements
-                badges={badges}
-                currentXP={userXP}
-                level={userLevel}
-                nextLevelXP={nextLevelXP}
-                shoppingListTotal={shoppingListTotal}
-              />
-            )}
+              <Route path="/conquistas" element={
+                <Achievements
+                  badges={badges}
+                  currentXP={userXP}
+                  level={userLevel}
+                  nextLevelXP={nextLevelXP}
+                  shoppingListTotal={shoppingListTotal}
+                />
+              } />
 
-            {view === ViewState.LEARNING && (
-              <LearningHub onEarnXP={handleEarnLearningXP} />
-            )}
+              <Route path="/aprender" element={
+                <LearningHub onEarnXP={handleEarnLearningXP} />
+              } />
 
-            {view === ViewState.PLANS && (
-              <PlansPage onBack={() => setView(ViewState.DASHBOARD)} />
-            )}
+              <Route path="/planos" element={
+                <PlansPage onBack={() => navigate(-1)} />
+              } />
 
-            {view === ViewState.AI_ADVISOR && (
-              <div className="max-w-4xl mx-auto">
-                <div className="mb-6">
-                  <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100">
-                    <BrainCircuit className="text-purple-500" />
-                    Análise Financeira com IA
-                  </h2>
-                  <p className="text-slate-500 dark:text-slate-400 mt-2">
-                    Desenvolvido com Gemini 2.5 Flash, obtenha insights personalizados sobre seus hábitos de consumo em
-                    <span className="text-emerald-500 dark:text-emerald-400 font-semibold ml-1">
-                      {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
-                    </span>.
-                  </p>
+              <Route path="/ia" element={
+                <div className="max-w-4xl mx-auto">
+                  <div className="mb-6">
+                    <h2 className="text-2xl font-bold flex items-center gap-2 text-slate-800 dark:text-slate-100">
+                      <BrainCircuit className="text-purple-500" />
+                      Análise Financeira com IA
+                    </h2>
+                    <p className="text-slate-500 dark:text-slate-400 mt-2">
+                      Desenvolvido com Gemini 2.5 Flash, obtenha insights personalizados sobre seus hábitos de consumo em
+                      <span className="text-emerald-500 dark:text-emerald-400 font-semibold ml-1">
+                        {new Date(selectedMonth + '-01').toLocaleDateString('pt-BR', { month: 'long', year: 'numeric' })}
+                      </span>.
+                    </p>
+                  </div>
+
+                  <AIInsights data={aiInsight} loading={aiLoading} />
                 </div>
+              } />
 
-                <AIInsights data={aiInsight} loading={aiLoading} />
-              </div>
-            )}
+              {/* Fallback */}
+              <Route path="*" element={<Navigate to="/" replace />} />
+            </Routes>
           </div>
         </div>
       </main>
@@ -850,13 +903,14 @@ export default function App() {
   );
 }
 
-// Sub-component for Nav Items
-const NavItem = ({ active, icon, label, onClick, className }: any) => (
-  <button
+// Updated Sub-component for Nav Items to use NavLink
+const NavItem = ({ to, icon, label, onClick, className }: any) => (
+  <NavLink
+    to={to}
     onClick={onClick}
-    className={cn(
+    className={({ isActive }) => cn(
       "w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200",
-      active
+      isActive
         ? "bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 shadow-sm border border-emerald-100 dark:border-emerald-500/20"
         : "text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 hover:text-slate-900 dark:hover:text-slate-200",
       className
@@ -864,5 +918,5 @@ const NavItem = ({ active, icon, label, onClick, className }: any) => (
   >
     {icon}
     <span>{label}</span>
-  </button>
+  </NavLink>
 );

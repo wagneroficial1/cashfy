@@ -39,17 +39,7 @@ export interface FinancialSummary {
   spendingLimit: number;
 }
 
-export enum ViewState {
-  DASHBOARD = 'DASHBOARD',
-  TRANSACTIONS = 'TRANSACTIONS',
-  INCOME = 'INCOME',
-  GOALS = 'GOALS',
-  AI_ADVISOR = 'AI_ADVISOR',
-  ACHIEVEMENTS = 'ACHIEVEMENTS',
-  LEARNING = 'LEARNING',
-  SHOPPING_LIST = 'SHOPPING_LIST',
-  PLANS = 'PLANS'
-}
+// ViewState enum removed in favor of React Router routes
 
 // Gamification Types
 export interface Badge {
