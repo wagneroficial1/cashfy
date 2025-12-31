@@ -6,6 +6,7 @@ import { Card, cn } from './UI';
 import { Project, Transaction, IncomeSource } from '../types';
 import { CurrencyConverter } from './CurrencyConverter';
 import { InterestCalculator } from './InterestCalculator';
+import { BitcoinWidget } from './BitcoinWidget';
 import { ArrowUpRight, ArrowDownRight, TrendingUp, Wallet, DollarSign } from 'lucide-react';
 
 interface StatCardProps {
@@ -132,29 +133,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ transactions, incomeSource
 
       {/* Main Grid Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Main Chart (Takes up 2 columns) */}
-        <Card className="lg:col-span-2 p-6 flex flex-col min-h-[400px]">
-          <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-6">Fluxo Diário (Dia a Dia)</h3>
-          {/* Correction: Use explicit height instead of flex-1 to prevent width/height(-1) warning */}
-          <div className="w-full h-[300px]">
-            <ResponsiveContainer width="100%" height="100%" minWidth={0}>
-              <BarChart data={chartData}>
-                <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
-                <XAxis dataKey="name" stroke={axisColor} tick={{ fontSize: 12 }} />
-                <YAxis stroke={axisColor} tick={{ fontSize: 12 }} tickFormatter={(val) => `R$${val}`} />
-                <Tooltip
-                  contentStyle={{ backgroundColor: tooltipBg, borderColor: tooltipBorder, color: tooltipText, borderRadius: '8px' }}
-                  itemStyle={{ color: tooltipText }}
-                  labelFormatter={(label) => `Dia ${label}`}
-                  formatter={(value: number, name: string) => [`R$ ${value.toFixed(2)}`, name === 'income' ? 'Receita' : 'Despesa']}
-                  cursor={{ fill: currentTheme === 'dark' ? '#334155' : '#f1f5f9', opacity: 0.4 }}
-                />
-                <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} name="Receita" />
-                <Bar dataKey="expense" fill="#f43f5e" radius={[4, 4, 0, 0]} name="Despesa" />
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
+        {/* Main Column (Chart + Bitcoin) */}
+        <div className="lg:col-span-2 space-y-6">
+          <Card className="p-6 flex flex-col min-h-[350px]">
+            <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-6">Fluxo Diário (Dia a Dia)</h3>
+            <div className="w-full h-[250px]">
+              <ResponsiveContainer width="100%" height="100%" minWidth={0}>
+                <BarChart data={chartData}>
+                  <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
+                  <XAxis dataKey="name" stroke={axisColor} tick={{ fontSize: 12 }} />
+                  <YAxis stroke={axisColor} tick={{ fontSize: 12 }} tickFormatter={(val) => `R$${val}`} />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: tooltipBg, borderColor: tooltipBorder, color: tooltipText, borderRadius: '8px' }}
+                    itemStyle={{ color: tooltipText }}
+                    labelFormatter={(label) => `Dia ${label}`}
+                    formatter={(value: number, name: string) => [`R$ ${value.toFixed(2)}`, name === 'income' ? 'Receita' : 'Despesa']}
+                    cursor={{ fill: currentTheme === 'dark' ? '#334155' : '#f1f5f9', opacity: 0.4 }}
+                  />
+                  <Bar dataKey="income" fill="#10b981" radius={[4, 4, 0, 0]} name="Receita" />
+                  <Bar dataKey="expense" fill="#f43f5e" radius={[4, 4, 0, 0]} name="Despesa" />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </Card>
+
+          <BitcoinWidget />
+        </div>
 
         {/* Right Column Stack (Currency + Interest + Income) */}
         <div className="space-y-6">
