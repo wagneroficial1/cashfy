@@ -48,20 +48,22 @@ export const PlansPage: React.FC<PlansPageProps> = ({ onBack }) => {
                     {/* FREE PLAN */}
                     <div className="relative p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col hover:border-slate-300 dark:hover:border-slate-700 transition-all">
                         <div className="mb-8">
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Free</h3>
-                            <p className="text-slate-500 dark:text-slate-400 text-sm">Para experimentar sem compromisso</p>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">FREE</h3>
+                            <p className="text-slate-500 dark:text-slate-400 text-sm">Transações ilimitadas</p>
                         </div>
 
                         <div className="mb-8">
                             <span className="text-4xl font-bold text-slate-900 dark:text-white">R$ 0</span>
-                            <span className="text-slate-500 dark:text-slate-400 ml-2">/mês</span>
                         </div>
 
                         <ul className="space-y-4 mb-8 flex-1">
-                            <PlanFeature>1 projeto</PlanFeature>
-                            <PlanFeature>Até 30 registros por mês</PlanFeature>
-                            <PlanFeature>Visão básica de entradas e saídas</PlanFeature>
-                            <PlanFeature>Ideal para testar o Cashfy</PlanFeature>
+                            <PlanFeature>3 metas financeiras no total</PlanFeature>
+                            <PlanFeature>Acesso à calculadora de juros compostos</PlanFeature>
+                            <PlanFeature>Acesso à simulação de aposentadoria</PlanFeature>
+                            <PlanFeature>Conversor de moeda</PlanFeature>
+                            <PlanFeature>Gamificação (básica)</PlanFeature>
+                            <PlanFeature>Lista de compras</PlanFeature>
+                            <PlanFeature>Micro-learning básico</PlanFeature>
                         </ul>
 
                         <Button
@@ -82,61 +84,62 @@ export const PlansPage: React.FC<PlansPageProps> = ({ onBack }) => {
                         <div className="h-full p-8 rounded-[14px] bg-slate-50 dark:bg-[#0B1120] flex flex-col">
                             <div className="mb-8">
                                 <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 flex items-center gap-2">
-                                    Pro <Star size={16} className="fill-emerald-500 text-emerald-500" />
+                                    PRO <Star size={16} className="fill-emerald-500 text-emerald-500" />
                                 </h3>
-                                <p className="text-slate-500 dark:text-slate-400 text-sm">Controle total da sua vida financeira</p>
+                                <p className="text-slate-500 dark:text-slate-400 text-sm">Transações ilimitadas</p>
                             </div>
 
                             <div className="mb-8">
-                                <span className="text-5xl font-bold text-slate-900 dark:text-white">R$ 29</span>
+                                <span className="text-5xl font-bold text-slate-900 dark:text-white">R$ 19,90</span>
                                 <span className="text-slate-500 dark:text-slate-400 ml-2">/mês</span>
                             </div>
 
                             <ul className="space-y-4 mb-8 flex-1">
-                                <PlanFeature highlighted>Até 5 projetos</PlanFeature>
-                                <PlanFeature highlighted>Registros ilimitados</PlanFeature>
-                                <PlanFeature>Relatórios mensais e anuais</PlanFeature>
-                                <PlanFeature>Projeções financeiras</PlanFeature>
-                                <PlanFeature>Histórico completo</PlanFeature>
-                                <PlanFeature>Exportação de dados</PlanFeature>
+                                <PlanFeature highlighted>Metas ilimitadas</PlanFeature>
+                                <PlanFeature highlighted>Consultor IA (análise mensal)</PlanFeature>
+                                <PlanFeature>Relatórios financeiros em PDF</PlanFeature>
+                                <PlanFeature>Gamificação completa</PlanFeature>
+                                <PlanFeature>Micro-learning completo</PlanFeature>
+                                <PlanFeature>Acesso a todas as funcionalidades do app</PlanFeature>
                             </ul>
 
                             <Button
                                 className="w-full py-6 bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg shadow-emerald-500/30 border-0"
                                 onClick={() => handleSubscribe('Pro')}
                             >
-                                Assinar Pro
+                                Assinar PRO
                             </Button>
                         </div>
                     </div>
 
-                    {/* BUSINESS PLAN */}
+                    {/* PLUS PLAN */}
                     <div className="relative p-8 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex flex-col hover:border-slate-300 dark:hover:border-slate-700 transition-all">
                         <div className="mb-8">
-                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">Business</h3>
-                            <p className="text-slate-500 dark:text-slate-400 text-sm">Para uso profissional e intensivo</p>
+                            <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2">PLUS</h3>
+                            <p className="text-slate-500 dark:text-slate-400 text-sm">Acesso de elite</p>
                         </div>
 
                         <div className="mb-8">
-                            <span className="text-4xl font-bold text-slate-900 dark:text-white">R$ 59</span>
+                            <span className="text-4xl font-bold text-slate-900 dark:text-white">R$ 29,90</span>
                             <span className="text-slate-500 dark:text-slate-400 ml-2">/mês</span>
                         </div>
 
                         <ul className="space-y-4 mb-8 flex-1">
-                            <PlanFeature>Projetos ilimitados</PlanFeature>
-                            <PlanFeature>Múltiplos usuários</PlanFeature>
-                            <PlanFeature>Relatórios avançados</PlanFeature>
-                            <PlanFeature>Comparação entre projetos</PlanFeature>
-                            <PlanFeature>Projeções avançadas</PlanFeature>
-                            <PlanFeature>Prioridade em novas funcionalidades</PlanFeature>
+                            <PlanFeature>Consultor IA com análise semanal</PlanFeature>
+                            <PlanFeature>Alertas inteligentes automáticos</PlanFeature>
+                            <PlanFeature>Histórico financeiro mais longo</PlanFeature>
+                            <PlanFeature>Desafios exclusivos</PlanFeature>
+                            <PlanFeature>Relatórios comparativos</PlanFeature>
+                            <PlanFeature>Conteúdo educacional premium</PlanFeature>
+                            <PlanFeature>Acesso a todas as funcionalidades do app</PlanFeature>
                         </ul>
 
                         <Button
                             variant="ghost"
                             className="w-full py-6 border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-slate-900 dark:text-white"
-                            onClick={() => handleSubscribe('Business')}
+                            onClick={() => handleSubscribe('Plus')}
                         >
-                            Assinar Business
+                            Assinar PLUS
                         </Button>
                     </div>
 
