@@ -115,8 +115,17 @@ export default function App() {
         if (metadata.apprentice_xp !== undefined) {
           setLearningTotalXP(Number(metadata.apprentice_xp));
         }
+        if (metadata.shopper_xp !== undefined) {
+          setShopperXP(Number(metadata.shopper_xp));
+        }
+        if (metadata.total_xp !== undefined) {
+          setUserXP(Number(metadata.total_xp));
+        }
         if (metadata.completed_lessons) {
           setCompletedLessons(metadata.completed_lessons);
+        }
+        if (metadata.unlocked_badge_ids) {
+          setUnlockedBadgeIds(new Set(metadata.unlocked_badge_ids));
         }
       }
     }
@@ -146,9 +155,11 @@ export default function App() {
 
   // Gamification State
   const [badges, setBadges] = useState<Badge[]>(ALL_BADGES);
-  const [userXP, setUserXP] = useState(350); // XP Inicial Mock
-  const [learningTotalXP, setLearningTotalXP] = useState(0); // XP acumulado apenas via LearningHub
+  const [userXP, setUserXP] = useState(0); // Inicia em 0, carrega do metadata
+  const [learningTotalXP, setLearningTotalXP] = useState(0); // XP acumulado via LearningHub
+  const [shopperXP, setShopperXP] = useState(0); // XP acumulado via Compras
   const [completedLessons, setCompletedLessons] = useState<string[]>([]);
+  const [unlockedBadgeIds, setUnlockedBadgeIds] = useState<Set<string>>(new Set());
   const [celebrationBadge, setCelebrationBadge] = useState<Badge | null>(null);
 
   // Date Filter State (YYYY-MM)
@@ -202,94 +213,91 @@ export default function App() {
 
     let newBadgeIdsToNotify: string[] = [];
     let xpGained = 0;
+    const newUnlockedIds = new Set(unlockedBadgeIds);
 
     const updatedBadges = badges.map(badge => {
-      let isUnlocked = badge.unlocked;
+      // Se já estava no metadata como desbloqueado, mantém desbloqueado
+      let isUnlocked = unlockedBadgeIds.has(badge.id);
       let currentXpReward = badge.xpReward;
       let currentDescription = badge.description;
       let currentUnlockedAt = badge.unlockedAt;
 
-      // Condition Checks
-      if (badge.id === 'first_goal' && goals.length > 0) isUnlocked = true;
-      if (badge.id === 'first_investment' && transactions.some(t => t.type === 'investment')) isUnlocked = true;
-      if (badge.id === 'goal_completed' && goals.some(g => g.currentAmount >= g.targetAmount)) isUnlocked = true;
-      if (badge.id === 'saver' && transactions.filter(t => t.type === 'income').length >= 5) isUnlocked = true;
-      if (badge.id === 'high_income' && transactions.some(t => t.type === 'income' && t.amount > 5000)) isUnlocked = true;
+      // Condition Checks (Só verifica se ainda não estiver desbloqueado)
+      if (!isUnlocked) {
+        if (badge.id === 'first_goal' && goals.length > 0) isUnlocked = true;
+        if (badge.id === 'first_investment' && transactions.some(t => t.type === 'investment')) isUnlocked = true;
+        if (badge.id === 'goal_completed' && goals.some(g => g.currentAmount >= g.targetAmount)) isUnlocked = true;
+        if (badge.id === 'saver' && transactions.filter(t => t.type === 'income').length >= 5) isUnlocked = true;
+        if (badge.id === 'high_income' && transactions.some(t => t.type === 'income' && t.amount > 5000)) isUnlocked = true;
 
-      // --- Badge de Comprador ---
-      if (badge.id === 'shopper') {
-        const shopCount = transactions.filter(t => t.category === 'Lista de Compras').length;
-        if (shopCount > 0) {
-          isUnlocked = true;
-          currentXpReward = shopCount * 50;
-        }
+        const totalSavedInGoals = goals.reduce((acc, g) => acc + g.currentAmount, 0);
+        if (badge.id === 'safe_guard' && totalSavedInGoals >= 10000) isUnlocked = true;
+
+        if (badge.id === 'shopper' && shopperXP >= 50) isUnlocked = true;
+        if (badge.id === 'apprentice' && learningTotalXP >= 50) isUnlocked = true;
       }
 
-      const totalSavedInGoals = goals.reduce((acc, g) => acc + g.currentAmount, 0);
-      if (badge.id === 'safe_guard' && totalSavedInGoals >= 10000) isUnlocked = true;
-
-      // --- Badge de Aprendiz ---
+      // --- Updates para badges dinâmicos (Aprendiz e Comprador) ---
       if (badge.id === 'apprentice') {
         currentDescription = `Conquistou ${learningTotalXP} XP em aprendizado.`;
-        if (learningTotalXP > 0) {
-          currentXpReward = learningTotalXP;
-        }
-        if (learningTotalXP >= 50) isUnlocked = true;
+        currentXpReward = learningTotalXP;
+      }
+      if (badge.id === 'shopper') {
+        currentDescription = `Conquistou ${shopperXP} XP gerenciando compras.`;
+        currentXpReward = shopperXP;
       }
 
-      // Detect newly unlocked badge
-      if (isUnlocked && !badge.unlocked) {
+      // Detect newly unlocked badge in THIS session
+      if (isUnlocked && !unlockedBadgeIds.has(badge.id)) {
         currentUnlockedAt = new Date().toISOString();
-        const unlockedBadge = { ...badge, unlocked: true, unlockedAt: currentUnlockedAt, xpReward: currentXpReward, description: currentDescription };
+        newUnlockedIds.add(badge.id);
 
-        // Logic to gain XP (only once)
+        // Badge-specific initial XP (for static ones)
         if (badge.id !== 'shopper' && badge.id !== 'apprentice') {
-          xpGained += unlockedBadge.xpReward;
+          xpGained += badge.xpReward;
         }
 
-        // Detect if we should show notification
-        if (hasHydrated.current && !shownAchievementIds.has(badge.id)) {
+        // Show celebration only if hydrated (prevents popups on initial load)
+        if (hasHydrated.current) {
           newBadgeIdsToNotify.push(badge.id);
-          setCelebrationBadge(unlockedBadge);
+          setCelebrationBadge({ ...badge, unlocked: true, unlockedAt: currentUnlockedAt, xpReward: currentXpReward, description: currentDescription });
           setNotifications(prev => [`Nova Conquista: ${badge.title}!`, ...prev]);
         }
-
-        return unlockedBadge;
       }
 
-      // Ensure descriptions and XP stay updated even if already unlocked
       if (isUnlocked) {
-        return { ...badge, unlocked: true, xpReward: currentXpReward, description: currentDescription };
+        return { ...badge, unlocked: true, unlockedAt: currentUnlockedAt || badge.unlockedAt, xpReward: currentXpReward, description: currentDescription };
       }
 
       return badge;
     });
 
     const hasChanges = JSON.stringify(updatedBadges) !== JSON.stringify(badges);
+    const badgeListChanged = newUnlockedIds.size > unlockedBadgeIds.size;
 
-    if (hasChanges) {
+    if (hasChanges || badgeListChanged) {
       setBadges(updatedBadges);
-      if (xpGained > 0) {
-        setUserXP(prev => prev + xpGained);
+
+      if (badgeListChanged) {
+        const idArray = Array.from(newUnlockedIds);
+        setUnlockedBadgeIds(newUnlockedIds);
+
+        // Persiste IDs desbloqueados no Supabase
+        supabase.auth.updateUser({
+          data: { unlocked_badge_ids: idArray }
+        });
       }
 
-      // Update shown IDs if any notifications were triggered
-      if (newBadgeIdsToNotify.length > 0) {
-        setShownAchievementIds(prev => {
-          const next = new Set(prev);
-          newBadgeIdsToNotify.forEach(id => next.add(id));
-          return next;
-        });
+      if (xpGained > 0) {
+        handleEarnXP(xpGained);
       }
     }
 
-    // After the first analysis run, mark as hydrated
-    // This ensures popups only happen on the SECOND run onwards (real events)
     if (session) {
       hasHydrated.current = true;
     }
 
-  }, [transactions, goals, session, learningTotalXP, shownAchievementIds]);
+  }, [transactions, goals, session, learningTotalXP, shopperXP, unlockedBadgeIds]);
 
   // Automated Alerts Check
   useEffect(() => {
@@ -482,56 +490,72 @@ export default function App() {
     setAiLoading(false);
   };
 
-  const handleEarnXP = (amount: number) => {
-    setUserXP(prev => {
-      const newTotal = prev + amount;
-      return newTotal < 0 ? 0 : newTotal; // Evita XP negativo total
-    });
+  const handleEarnXP = async (amount: number) => {
+    if (!session) return;
 
-    if (amount > 0) {
-      setNotifications(prev => [`+${amount} XP recebido!`, ...prev]);
-    } else {
-      // Formatação correta para perda de XP
-      setNotifications(prev => [`${amount} XP (Penalidade)`, ...prev]);
-    }
+    setUserXP(prev => {
+      const next = Math.max(0, prev + amount);
+
+      // Persiste no Supabase
+      supabase.auth.updateUser({
+        data: { total_xp: next }
+      });
+
+      if (amount > 0) {
+        setNotifications(prevNotif => [`+${amount} XP recebido!`, ...prevNotif]);
+      } else if (amount < 0) {
+        setNotifications(prevNotif => [`${amount} XP (Penalidade)`, ...prevNotif]);
+      }
+
+      return next;
+    });
   };
 
   const handleEarnLearningXP = async (amount: number, moduleId?: string) => {
-    // Check for success and idempotency (if moduleId provided)
-    if (amount > 0 && moduleId) {
-      if (completedLessons.includes(moduleId)) {
-        console.log(`Lesson ${moduleId} already completed. XP skipped.`);
-        return;
+    if (!session || (amount > 0 && moduleId && completedLessons.includes(moduleId))) return;
+
+    const nextLearningXP = learningTotalXP + amount;
+    const nextTotalXP = userXP + amount;
+    const nextCompleted = moduleId ? [...completedLessons, moduleId] : completedLessons;
+
+    const { error } = await supabase.auth.updateUser({
+      data: {
+        apprentice_xp: nextLearningXP,
+        total_xp: nextTotalXP,
+        completed_lessons: nextCompleted
       }
+    });
 
-      const newXP = learningTotalXP + amount;
-      const newCompleted = [...completedLessons, moduleId];
+    if (!error) {
+      setLearningTotalXP(nextLearningXP);
+      setUserXP(nextTotalXP);
+      if (moduleId) setCompletedLessons(nextCompleted);
+      if (amount > 0) setNotifications(prev => [`+${amount} XP recebido!`, ...prev]);
+    }
+  };
 
-      // Update Supabase (Source of Truth)
-      const { error } = await supabase.auth.updateUser({
-        data: {
-          apprentice_xp: newXP,
-          completed_lessons: newCompleted
-        }
-      });
+  const handleEarnShopperXP = async (amount: number) => {
+    if (!session) return;
 
-      if (!error) {
-        setLearningTotalXP(newXP);
-        setCompletedLessons(newCompleted);
-        handleEarnXP(amount);
-      } else {
-        console.error("Error persisting XP to metadata:", error);
+    const nextShopperXP = shopperXP + amount;
+    const nextTotalXP = userXP + amount;
+
+    const { error } = await supabase.auth.updateUser({
+      data: {
+        shopper_xp: nextShopperXP,
+        total_xp: nextTotalXP
       }
-    } else {
-      // Penalty or direct update without moduleId (legacy)
-      handleEarnXP(amount);
-      setLearningTotalXP(prev => Math.max(0, prev + amount));
+    });
+
+    if (!error) {
+      setShopperXP(nextShopperXP);
+      setUserXP(nextTotalXP);
+      if (amount > 0) setNotifications(prev => [`+${amount} XP recebido!`, ...prev]);
     }
   };
 
   // Handler para concluir lista de compras
-  const handleConcludeShopping = (total: number, itemsCount: number) => {
-    // 1. Geração de Data Local Robusta
+  const handleConcludeShopping = async (total: number, itemsCount: number) => {
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -539,25 +563,28 @@ export default function App() {
     const today = `${year}-${month}-${day}`;
     const currentMonthStr = `${year}-${month}`;
 
-    const newTx: Transaction = {
-      id: Date.now().toString(),
+    const newTx: Omit<Transaction, 'id'> = {
       date: today,
       description: `Supermercado (${itemsCount} itens)`,
       amount: total,
-      category: 'Lista de Compras', // String EXATA para ativar Badge
+      category: 'Lista de Compras',
       type: 'expense'
     };
 
-    // 2. Adiciona a transação
-    setTransactions(prev => [newTx, ...prev]);
+    try {
+      // 1. Persiste no Supabase
+      const savedTx = await transactionsService.createTransaction(newTx);
+      setTransactions(prev => [savedTx, ...prev]);
 
-    // 3. Crédito de XP Simples (sem modal complexo aqui)
-    handleEarnXP(50);
+      // 2. Crédito de XP Persistente
+      await handleEarnShopperXP(50);
 
-    // 4. Atualiza Mês para garantir que a transação apareça se o usuário for ver
-    setSelectedMonth(currentMonthStr);
-
-    setNotifications(prev => [`Compra de R$ ${total.toFixed(2)} registrada!`, ...prev]);
+      setSelectedMonth(currentMonthStr);
+      setNotifications(prev => [`Compra de R$ ${total.toFixed(2)} registrada!`, ...prev]);
+    } catch (error) {
+      console.error("Error finalizing shopping list:", error);
+      alert("Erro ao salvar compra. Tente novamente.");
+    }
   };
 
   // --- View Logic ---
